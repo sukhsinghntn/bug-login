@@ -22,5 +22,19 @@ namespace DynamicFormsApp.Server.Controllers
             await _emailService.SendBugReportEmail(email);
             return Ok();
         }
+
+        [HttpPost("formresponse")]
+        public async Task<IActionResult> SendFormResponseEmail([FromBody] FormResponseNotification model)
+        {
+            await _emailService.SendFormResponseNotification(model.toEmail, model.formName, model.formId);
+            return Ok();
+        }
+
+        public class FormResponseNotification
+        {
+            public string toEmail { get; set; }
+            public string formName { get; set; }
+            public int formId { get; set; }
+        }
     }
 }

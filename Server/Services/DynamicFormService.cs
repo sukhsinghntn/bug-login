@@ -24,13 +24,15 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
-        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin)
+        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail)
         {
             var form = new Form
             {
                 Name = formName,
                 CreatedBy = createdBy,
                 RequireLogin = requireLogin,
+                NotifyOnResponse = notifyOnResponse,
+                NotificationEmail = notificationEmail,
                 Fields = fields.Select(f => new FormField
                 {
                     Key = SanitizeKey(f.Key),
@@ -70,7 +72,7 @@ namespace DynamicFormsApp.Server.Services
                 ?? throw new InvalidOperationException("Form not found");
         }
 
-        public async Task StoreResponseAsync(int formId, Dictionary<string, object> values)
+        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values)
         {
             var form = await _db.Forms.FindAsync(formId)
                        ?? throw new InvalidOperationException("Form not found");
@@ -116,6 +118,8 @@ namespace DynamicFormsApp.Server.Services
 
             sqlParams.Add(new SqlParameter("@p_created", DateTime.UtcNow));
             await _db.Database.ExecuteSqlRawAsync(sql, sqlParams.ToArray());
+
+            return form;
         }
 
         public async Task<List<Form>> GetAllFormsAsync()
