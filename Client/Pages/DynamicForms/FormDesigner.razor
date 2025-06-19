@@ -19,6 +19,10 @@
     <input class="form-check-input" type="checkbox" id="loginToggle" @bind="requireLogin" />
     <label class="form-check-label" for="loginToggle">Require login to access form</label>
 </div>
+<div class="form-check form-switch mb-4">
+    <input class="form-check-input" type="checkbox" id="notifyToggle" @bind="notifyOnResponse" />
+    <label class="form-check-label" for="notifyToggle">Email on new response</label>
+</div>
 
 @foreach (var field in fields)
 {
@@ -87,6 +91,7 @@
     private string formName = string.Empty;
     private List<DesignerField> fields = new();
     private bool requireLogin = true;
+    private bool notifyOnResponse = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -119,6 +124,7 @@
         {
             Name = formName,
             RequireLogin = requireLogin,
+            NotifyOnResponse = notifyOnResponse,
             Fields = fields.Select(f => new
             {
                 Key = f.Key,

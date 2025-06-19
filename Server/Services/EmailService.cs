@@ -49,5 +49,24 @@ namespace DynamicFormsApp.Server.Services
             };
             await client.SendMailAsync(mail);
         }
+
+        public async Task SendFormResponseNotification(string toEmail, string formName, int formId)
+        {
+            var mail = new MailMessage
+            {
+                From = new MailAddress("NDABugReport@ntnanderson.com"),
+                Subject = $"New response for form '{formName}'",
+                Body = $"A new response has been submitted for your form '{formName}'.",
+                IsBodyHtml = false
+            };
+
+            mail.To.Add(toEmail);
+
+            using var client = new SmtpClient(_configuration["Email:IP"])
+            {
+                Port = int.Parse(_configuration["Email:Port"]!)
+            };
+            await client.SendMailAsync(mail);
+        }
     }
 }

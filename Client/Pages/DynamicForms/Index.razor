@@ -26,6 +26,10 @@
     <input class="form-check-input" type="checkbox" id="loginToggle" @bind="requireLogin" />
     <label class="form-check-label" for="loginToggle">Require login to access form</label>
 </div>
+<div class="form-check form-switch mb-4">
+    <input class="form-check-input" type="checkbox" id="notifyToggle" @bind="notifyOnResponse" />
+    <label class="form-check-label" for="notifyToggle">Email on new response</label>
+</div>
 
 @if (!isPreviewMode)
 {
@@ -92,6 +96,7 @@ else
     private List<DesignerRow> rows = new() { new DesignerRow() };
     private bool isPreviewMode = false;
     private bool requireLogin = true;
+    private bool notifyOnResponse = false;
     private DotNetObjectReference<Index>? objRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -189,6 +194,7 @@ else
         {
             Name = formName,
             RequireLogin = requireLogin,
+            NotifyOnResponse = notifyOnResponse,
             Fields = rows.SelectMany((row, rIdx) => row.Fields.Select((f, cIdx) => new
             {
                 f.Key,

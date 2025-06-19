@@ -13,5 +13,6 @@ namespace DynamicFormsApp.Server.Services
         public string Name { get; set; }
         public List<FormField> Fields { get; set; }
         public bool RequireLogin { get; set; } = true;
+        public bool NotifyOnResponse { get; set; } = false;
     }
 }
