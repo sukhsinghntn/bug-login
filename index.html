@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Form</title>
+</head>
+<body>
+  <h1>Create Form</h1>
+  <form id="createForm">
+    <input type="hidden" id="ownerId" value="" />
+    <div>
+      <label>Title: <input type="text" id="title"></label>
+    </div>
+    <div>
+      <label><input type="checkbox" id="requireLogin"> Require login to access form</label>
+    </div>
+    <div>
+      <label><input type="checkbox" id="notifyByEmail"> Email me for each response</label>
+    </div>
+    <button type="submit">Create</button>
+  </form>
+
+  <script>
+    // simple user registration for demo
+    async function register() {
+      const username = prompt('Enter username');
+      const email = prompt('Enter email');
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email })
+      });
+      const user = await res.json();
+      document.getElementById('ownerId').value = user.id;
+    }
+
+    document.getElementById('createForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = {
+        title: document.getElementById('title').value,
+        requireLogin: document.getElementById('requireLogin').checked,
+        notifyByEmail: document.getElementById('notifyByEmail').checked,
+        ownerId: document.getElementById('ownerId').value
+      };
+      const res = await fetch('/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const created = await res.json();
+      alert('Created form ' + created.id);
+    });
+
+    register();
+  </script>
+</body>
+</html>
