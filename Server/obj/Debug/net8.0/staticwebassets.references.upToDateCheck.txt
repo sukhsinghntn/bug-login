@@ -1,0 +1,10 @@
+P:\Dev\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+P:\Dev\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\NDALogin\Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\ssingh\Desktop\DynamicFormsApp\DynamicFormsApp\Client\obj\Debug\net8.0\staticwebassets.build.json

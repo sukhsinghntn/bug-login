@@ -1,0 +1,24 @@
+@page "/"
+@inject NavigationManager Navigation
+@inject CookieHelper CookieHelper
+
+<h3 class="mb-3">Welcome</h3>
+<div class="d-flex gap-3">
+    <a href="/forms/new" class="btn btn-primary">Create Form</a>
+    <a href="/myforms" class="btn btn-secondary">My Forms</a>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var user = await CookieHelper.LoginStatus();
+            if (string.IsNullOrEmpty(user))
+            {
+                var ret = Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri));
+                Navigation.NavigateTo($"login?returnUrl={ret}", true);
+            }
+        }
+    }
+}
