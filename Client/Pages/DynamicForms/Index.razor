@@ -3,10 +3,12 @@
 @using System.Text.Json
 @using DynamicFormsApp.Client.Components
 @using DynamicFormsApp.Shared
+@using DynamicFormsApp.Shared.Models
 @inject IJSRuntime JS
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject CookieHelper CookieHelper
+@inject IUserService UserService
 
 @implements IDisposable
 
@@ -30,6 +32,13 @@
     <input class="form-check-input" type="checkbox" id="notifyToggle" @bind="notifyOnResponse" />
     <label class="form-check-label" for="notifyToggle">Email on new response</label>
 </div>
+@if (notifyOnResponse)
+{
+    <div class="mb-3">
+        <label class="form-label">Notification Email</label>
+        <input class="form-control" placeholder="@currentUser?.Email" @bind="notificationEmail" />
+    </div>
+}
 
 @if (!isPreviewMode)
 {
@@ -97,6 +106,8 @@ else
     private bool isPreviewMode = false;
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
+    private string notificationEmail = string.Empty;
+    private UserModel? currentUser;
     private DotNetObjectReference<Index>? objRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -110,6 +121,9 @@ else
                 Navigation.NavigateTo($"login?returnUrl={ret}", true);
                 return;
             }
+
+            currentUser = await UserService.GetUserData(user);
+            notificationEmail = currentUser?.Email ?? string.Empty;
 
             objRef ??= DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef);
@@ -195,6 +209,7 @@ else
             Name = formName,
             RequireLogin = requireLogin,
             NotifyOnResponse = notifyOnResponse,
+            NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,
             Fields = rows.SelectMany((row, rIdx) => row.Fields.Select((f, cIdx) => new
             {
                 f.Key,

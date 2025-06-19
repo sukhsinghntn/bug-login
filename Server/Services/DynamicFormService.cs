@@ -24,7 +24,7 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
-        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse)
+        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail)
         {
             var form = new Form
             {
@@ -32,6 +32,7 @@ namespace DynamicFormsApp.Server.Services
                 CreatedBy = createdBy,
                 RequireLogin = requireLogin,
                 NotifyOnResponse = notifyOnResponse,
+                NotificationEmail = notificationEmail,
                 Fields = fields.Select(f => new FormField
                 {
                     Key = SanitizeKey(f.Key),

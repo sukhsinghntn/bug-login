@@ -15,6 +15,7 @@ namespace DynamicFormsApp.Shared.Models
         public string CreatedBy { get; set; }
         public bool RequireLogin { get; set; } = true;
         public bool NotifyOnResponse { get; set; } = false;
+        public string? NotificationEmail { get; set; }
         public List<FormField>? Fields { get; set; }
     }
 }

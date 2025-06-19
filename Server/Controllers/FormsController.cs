@@ -31,7 +31,7 @@ namespace DynamicFormsApp.Server.Controllers
                 return Unauthorized();
             }
 
-            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse);
+            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail);
             return Ok(new { FormId = newFormId });
         }
 
@@ -83,10 +83,19 @@ namespace DynamicFormsApp.Server.Controllers
 
                 if (form.NotifyOnResponse)
                 {
-                    var user = await _userSvc.GetUserData(form.CreatedBy);
-                    if (user != null && !string.IsNullOrEmpty(user.Email))
+                    string? to = form.NotificationEmail;
+                    if (string.IsNullOrWhiteSpace(to))
                     {
-                        await _emailSvc.SendFormResponseNotification(user.Email, form.Name, form.Id);
+                        var user = await _userSvc.GetUserData(form.CreatedBy);
+                        if (user != null && !string.IsNullOrEmpty(user.Email))
+                        {
+                            to = user.Email;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(to))
+                    {
+                        await _emailSvc.SendFormResponseNotification(to, form.Name, form.Id);
                     }
                 }
 
