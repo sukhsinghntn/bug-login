@@ -52,12 +52,16 @@ namespace DynamicFormsApp.Server.Services
 
         public async Task SendFormResponseNotification(string toEmail, string formName, int formId)
         {
+            var baseUrl = _configuration["AppBaseUrl"]?.TrimEnd('/') ?? string.Empty;
+            var responsesLink = $"{baseUrl}/forms/{formId}/responses";
+
             var mail = new MailMessage
             {
                 From = new MailAddress("NDABugReport@ntnanderson.com"),
-                Subject = $"New response for form '{formName}'",
-                Body = $"A new response has been submitted for your form '{formName}'.",
-                IsBodyHtml = false
+                Subject = $"Your form '{formName}' received a new response",
+                Body = $"A new response has been submitted for your form '<b>{formName}</b>'.<br/>" +
+                       $"<a href='{responsesLink}'>View responses</a>.",
+                IsBodyHtml = true
             };
 
             mail.To.Add(toEmail);
