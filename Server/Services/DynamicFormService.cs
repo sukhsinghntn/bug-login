@@ -150,6 +150,25 @@ namespace DynamicFormsApp.Server.Services
                 .ToListAsync();
         }
 
+        public async Task<List<Form>> SearchFormsAsync(string query, bool includePrivate)
+        {
+            var q = _db.Forms
+                .Include(f => f.Fields)
+                .Where(f => f.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                q = q.Where(f => EF.Functions.Like(f.Name, $"%{query}%"));
+            }
+
+            if (!includePrivate)
+            {
+                q = q.Where(f => !f.RequireLogin);
+            }
+
+            return await q.ToListAsync();
+        }
+
         public async Task<List<Dictionary<string, object>>> GetResponsesAsync(int formId)
         {
             var form = await _db.Forms.FindAsync(formId)

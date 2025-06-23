@@ -60,6 +60,14 @@ namespace DynamicFormsApp.Server.Controllers
             return Ok(all);
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Form>>> Search([FromQuery] string q)
+        {
+            bool includePrivate = Request.Cookies.ContainsKey("userName");
+            var results = await _svc.SearchFormsAsync(q ?? string.Empty, includePrivate);
+            return Ok(results);
+        }
+
         [HttpGet("mine")]
         public async Task<ActionResult<IEnumerable<Form>>> GetMine()
         {
