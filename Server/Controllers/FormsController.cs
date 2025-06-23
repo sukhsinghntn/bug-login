@@ -31,7 +31,7 @@ namespace DynamicFormsApp.Server.Controllers
                 return Unauthorized();
             }
 
-            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail);
+            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
             return Ok(new { FormId = newFormId });
         }
 
@@ -70,6 +70,19 @@ namespace DynamicFormsApp.Server.Controllers
 
             var mine = await _svc.GetFormsByUserAsync(user);
             return Ok(mine);
+        }
+
+        // DELETE /api/forms/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (!Request.Cookies.TryGetValue("userName", out var user) || string.IsNullOrEmpty(user))
+            {
+                return Unauthorized();
+            }
+
+            await _svc.DeactivateFormAsync(id, user);
+            return NoContent();
         }
 
         // POST /api/forms/{id}/responses

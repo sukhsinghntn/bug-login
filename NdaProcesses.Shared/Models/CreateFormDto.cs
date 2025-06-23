@@ -15,5 +15,6 @@ namespace DynamicFormsApp.Server.Services
         public bool RequireLogin { get; set; } = true;
         public bool NotifyOnResponse { get; set; } = false;
         public string? NotificationEmail { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

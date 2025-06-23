@@ -24,7 +24,7 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
-        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail)
+        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
             {
@@ -33,6 +33,7 @@ namespace DynamicFormsApp.Server.Services
                 RequireLogin = requireLogin,
                 NotifyOnResponse = notifyOnResponse,
                 NotificationEmail = notificationEmail,
+                IsActive = isActive,
                 Fields = fields.Select(f => new FormField
                 {
                     Key = SanitizeKey(f.Key),
@@ -122,6 +123,18 @@ namespace DynamicFormsApp.Server.Services
             return form;
         }
 
+        public async Task DeactivateFormAsync(int formId, string user)
+        {
+            var form = await _db.Forms.FirstOrDefaultAsync(f => f.Id == formId && f.CreatedBy == user);
+            if (form == null)
+            {
+                throw new InvalidOperationException("Form not found");
+            }
+
+            form.IsActive = false;
+            await _db.SaveChangesAsync();
+        }
+
         public async Task<List<Form>> GetAllFormsAsync()
         {
             return await _db.Forms
@@ -133,7 +146,7 @@ namespace DynamicFormsApp.Server.Services
         {
             return await _db.Forms
                 .Include(f => f.Fields)
-                .Where(f => f.CreatedBy == user)
+                .Where(f => f.CreatedBy == user && f.IsActive)
                 .ToListAsync();
         }
 

@@ -210,6 +210,7 @@ else
             RequireLogin = requireLogin,
             NotifyOnResponse = notifyOnResponse,
             NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,
+            IsActive = true,
             Fields = rows.SelectMany((row, rIdx) => row.Fields.Select((f, cIdx) => new
             {
                 f.Key,

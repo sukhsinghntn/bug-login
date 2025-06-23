@@ -142,6 +142,7 @@
             RequireLogin = requireLogin,
             NotifyOnResponse = notifyOnResponse,
             NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,
+            IsActive = true,
             Fields = fields.Select(f => new
             {
                 Key = f.Key,
