@@ -48,7 +48,7 @@
 @if (!isPreviewMode)
 {
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3" style="position:sticky;top:75px;max-height:calc(100vh - 90px);overflow-y:auto;">
             <h5 class="mb-3">Toolbox</h5>
             <div class="d-flex flex-column gap-2">
                 <div class="draggable-field" draggable="true" data-type="text"><span class="material-icons me-1">short_text</span> Short Answer</div>
@@ -78,8 +78,8 @@
                         {
                             <div class="col-md-@(12 / (rows[rowIndex].Fields.Count == 0 ? 1 : rows[rowIndex].Fields.Count))" data-id="@i">
                                 <FieldEditor Field="rows[rowIndex].Fields[i]"
-                                             OnRemove="f => RemoveField(rowIndex, f)"
-                                             OnDuplicate="f => DuplicateField(rowIndex, f)" />
+                                             OnRemove="async f => await RemoveField(rowIndex, f)"
+                                             OnDuplicate="async f => await DuplicateField(rowIndex, f)" />
                             </div>
                         }
                         <div class="col-12">
@@ -167,9 +167,13 @@ else
         StateHasChanged();
     }
 
-    void AddRow() => rows.Add(new DesignerRow());
+    async Task AddRow()
+    {
+        rows.Add(new DesignerRow());
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+    }
 
-    void AddField(int row)
+    async Task AddField(int row)
     {
         if (rows[row].Fields.Count >= 4)
         {
@@ -182,11 +186,16 @@ else
             return;
         }
         rows[row].Fields.Add(new DesignerField());
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
-    void RemoveField(int row, DesignerField field) => rows[row].Fields.Remove(field);
+    async Task RemoveField(int row, DesignerField field)
+    {
+        rows[row].Fields.Remove(field);
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+    }
 
-    void DuplicateField(int row, DesignerField field)
+    async Task DuplicateField(int row, DesignerField field)
     {
         var copy = new DesignerField
         {
@@ -202,10 +211,11 @@ else
         };
         var list = rows[row].Fields;
         list.Insert(list.IndexOf(field) + 1, copy);
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
-    public void AddFieldFromDrop(string fieldType, int rowIndex, int colIndex)
+    public async Task AddFieldFromDrop(string fieldType, int rowIndex, int colIndex)
     {
         if (rowIndex < 0 || rowIndex >= rows.Count)
             rowIndex = rows.Count - 1;
@@ -231,10 +241,11 @@ else
             list.Insert(colIndex, field);
 
         StateHasChanged();
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
-    public void AddRowFromDrop(string fieldType, int insertIndex)
+    public async Task AddRowFromDrop(string fieldType, int insertIndex)
     {
         if (insertIndex < 0 || insertIndex > rows.Count)
             insertIndex = rows.Count;
@@ -243,6 +254,7 @@ else
         row.Fields.Add(new DesignerField { FieldType = fieldType });
         rows.Insert(insertIndex, row);
         StateHasChanged();
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task HandleSubmit()
