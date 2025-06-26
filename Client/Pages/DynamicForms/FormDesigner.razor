@@ -141,6 +141,17 @@
 
     async Task HandleSubmit()
     {
+        if (string.IsNullOrWhiteSpace(formName))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Form name required",
+                Detail = "Please enter a form name before creating."
+            });
+            return;
+        }
+
         var payload = new
         {
             Name = formName,
