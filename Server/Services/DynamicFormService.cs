@@ -24,6 +24,21 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
+        private string GetUniqueKey(string rawKey, HashSet<string> existing)
+        {
+            var baseKey = SanitizeKey(rawKey);
+            var unique = baseKey;
+            int suffix = 1;
+            while (existing.Contains(unique))
+            {
+                unique = $"{baseKey}_{suffix}";
+                suffix++;
+            }
+            existing.Add(unique);
+            return unique;
+        }
+
+
         public async Task<int> CreateFormAsync(string formName, string? description, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
@@ -35,17 +50,22 @@ namespace DynamicFormsApp.Server.Services
                 NotifyOnResponse = notifyOnResponse,
                 NotificationEmail = notificationEmail,
                 IsActive = isActive,
-                Fields = fields.Select(f => new FormField
-                {
-                    Key = SanitizeKey(f.Key),
-                    Label = f.Label,
-                    FieldType = f.FieldType,
-                    IsRequired = f.IsRequired,
-                    OptionsJson = f.OptionsJson,
-                    Row = f.Row,
-                    Column = f.Column
-                }).ToList()
+                Fields = new List<FormField>()
             };
+            var keySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var fld in fields)
+            {
+                form.Fields.Add(new FormField
+                {
+                    Key = GetUniqueKey(fld.Key, keySet),
+                    Label = fld.Label,
+                    FieldType = fld.FieldType,
+                    IsRequired = fld.IsRequired,
+                    OptionsJson = fld.OptionsJson,
+                    Row = fld.Row,
+                    Column = fld.Column
+                });
+            }
             _db.Forms.Add(form);
             await _db.SaveChangesAsync();
 
