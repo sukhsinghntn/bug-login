@@ -22,8 +22,10 @@ else
         {
             <div class="col-md-@(12 / (rowGroup.Count() == 0 ? 1 : rowGroup.Count()))">
                 <div class="mb-3">
-                    <label class="form-label">@fld.Label</label>
-                    @DisplayValue(fld)
+                    <label class="form-label fw-semibold">@fld.Label</label>
+                    <div class="form-control-plaintext border rounded bg-light p-2">
+                        @DisplayValue(fld)
+                    </div>
                 </div>
             </div>
         }
