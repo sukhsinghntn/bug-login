@@ -31,7 +31,7 @@
                     <tr>
                         @foreach (var col in columns)
                         {
-                            <th scope="col">@col</th>
+                            <th scope="col">@(col == "ResponderName" ? "Submitted By" : col)</th>
                         }
                         <th scope="col"></th>
                     </tr>
@@ -106,7 +106,12 @@
             responses = await Http.GetFromJsonAsync<List<Dictionary<string, object>>>($"api/forms/{FormId}/responses");
 
             var fieldKeys = form.Fields.Select(f => f.Key);
-            columns = new[] { "ResponseId", "CreatedAt" }.Concat(fieldKeys).ToArray();
+            columns = new[] { "ResponseId", "CreatedAt" }.Concat(fieldKeys);
+            if (form.RequireLogin)
+            {
+                columns = columns.Concat(new[] { "ResponderName" });
+            }
+            columns = columns.ToArray();
 
             StateHasChanged();
         }

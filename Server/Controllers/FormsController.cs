@@ -107,7 +107,15 @@ namespace DynamicFormsApp.Server.Controllers
         {
             try
             {
-                var form = await _svc.StoreResponseAsync(id, values);
+                string? responder = null;
+                var form = await _svc.GetFormAsync(id);
+                if (form.RequireLogin && Request.Cookies.TryGetValue("userName", out var userId) && !string.IsNullOrEmpty(userId))
+                {
+                    var userData = await _userSvc.GetUserData(userId);
+                    responder = userData?.DisplayName ?? userId;
+                }
+
+                form = await _svc.StoreResponseAsync(id, values, responder);
 
                 if (form.NotifyOnResponse)
                 {

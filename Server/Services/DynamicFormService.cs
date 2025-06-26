@@ -55,6 +55,10 @@ namespace DynamicFormsApp.Server.Services
                 $"CREATE TABLE [{tableName}] (" +
                 "ResponseId INT IDENTITY(1,1) PRIMARY KEY, " +
                 "CreatedAt DATETIME2 NOT NULL");
+            if (requireLogin)
+            {
+                sb.Append(", [ResponderName] NVARCHAR(255) NULL");
+            }
 
             foreach (var fld in form.Fields)
             {
@@ -74,7 +78,7 @@ namespace DynamicFormsApp.Server.Services
                 ?? throw new InvalidOperationException("Form not found");
         }
 
-        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values)
+        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values, string? responderName = null)
         {
             var form = await _db.Forms.FindAsync(formId)
                        ?? throw new InvalidOperationException("Form not found");
@@ -85,6 +89,11 @@ namespace DynamicFormsApp.Server.Services
             var paramNames = string.Join(", ",
                 values.Keys.Select((k, i) => $"@p{i}")
                            .Concat(new[] { "@p_created" }));
+            if (form.RequireLogin)
+            {
+                cols += ", ResponderName";
+                paramNames += ", @p_responder";
+            }
 
             var sql = $"INSERT INTO [{tableName}] ({cols}) VALUES ({paramNames});";
 
@@ -119,6 +128,10 @@ namespace DynamicFormsApp.Server.Services
             }
 
             sqlParams.Add(new SqlParameter("@p_created", DateTime.UtcNow));
+            if (form.RequireLogin)
+            {
+                sqlParams.Add(new SqlParameter("@p_responder", (object?)responderName ?? DBNull.Value));
+            }
             await _db.Database.ExecuteSqlRawAsync(sql, sqlParams.ToArray());
 
             return form;

@@ -6,7 +6,13 @@
 @inject NavigationManager Navigation
 @inject CookieHelper CookieHelper
 
-<h3>Response for @form?.Name</h3>
+<div class="d-flex justify-content-between align-items-center">
+    <h3 class="mb-0">Response for @form?.Name</h3>
+    @if (!string.IsNullOrEmpty(responderName))
+    {
+        <span class="text-muted">Submitted by @responderName</span>
+    }
+</div>
 <p class="text-muted">@form?.Description</p>
 
 @if (form == null || response == null)
@@ -39,6 +45,7 @@ else
 
     private Form? form;
     private Dictionary<string, object>? response;
+    private string? responderName;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -54,6 +61,10 @@ else
 
             form = await Http.GetFromJsonAsync<Form>($"api/forms/{FormId}");
             response = await Http.GetFromJsonAsync<Dictionary<string, object>>($"api/forms/{FormId}/responses/{ResponseId}");
+            if (response.TryGetValue("ResponderName", out var respName))
+            {
+                responderName = respName?.ToString();
+            }
             StateHasChanged();
         }
     }
