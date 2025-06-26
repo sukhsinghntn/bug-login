@@ -17,3 +17,14 @@ window.initSortable = (selector, dotnetHelper) => {
         });
     });
 };
+
+window.initListSortable = (selector, dotnetHelper) => {
+    const container = document.querySelector(selector);
+    if (!container || container.dataset.sortableInit === 'true') return;
+    container.dataset.sortableInit = 'true';
+    new Sortable(container, {
+        animation: 150,
+        handle: '.move-handle',
+        onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', evt.oldIndex, evt.newIndex)
+    });
+};

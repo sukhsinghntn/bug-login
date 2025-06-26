@@ -3,9 +3,11 @@
     cursor: grab;
     border: 1px dashed #ced4da;
     background-color: #f8f9fa;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     transition: all 0.2s ease;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
 }
 
     .draggable-field:active {
