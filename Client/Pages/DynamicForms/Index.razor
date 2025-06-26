@@ -12,7 +12,8 @@
 
 @implements IDisposable
 
-<h2 class="mb-4">Form Builder</h2>
+<h2 class="mb-2">Form Builder</h2>
+<p class="text-muted">Drag fields to reorder or move them between rows. Each row can have up to four columns.</p>
 
 <div class="form-check form-switch mb-4">
     <input class="form-check-input" type="checkbox" id="previewToggle" @bind="isPreviewMode" />
@@ -148,6 +149,18 @@ else
         if (oldIndex < 0 || oldIndex >= source.Count || newIndex < 0 || newIndex > dest.Count)
             return;
 
+        if (fromRow != toRow && dest.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            StateHasChanged();
+            return;
+        }
+
         var moved = source[oldIndex];
         source.RemoveAt(oldIndex);
         dest.Insert(newIndex, moved);
@@ -156,7 +169,20 @@ else
 
     void AddRow() => rows.Add(new DesignerRow());
 
-    void AddField(int row) => rows[row].Fields.Add(new DesignerField());
+    void AddField(int row)
+    {
+        if (rows[row].Fields.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            return;
+        }
+        rows[row].Fields.Add(new DesignerField());
+    }
 
     void RemoveField(int row, DesignerField field) => rows[row].Fields.Remove(field);
 
@@ -186,6 +212,18 @@ else
 
         var list = rows[rowIndex].Fields;
         var field = new DesignerField { FieldType = fieldType };
+
+        if (list.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            StateHasChanged();
+            return;
+        }
 
         if (colIndex < 0 || colIndex > list.Count)
             list.Add(field);
