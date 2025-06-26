@@ -208,6 +208,32 @@
             return;
         }
 
+        foreach (var f in fields)
+        {
+            if (string.IsNullOrWhiteSpace(f.Key) || string.IsNullOrWhiteSpace(f.Label))
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Field details missing",
+                    Detail = "Each field needs a key and a label."
+                });
+                return;
+            }
+
+            if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") &&
+                f.Options.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Options required",
+                    Detail = $"Add at least one option for '{f.Label}'."
+                });
+                return;
+            }
+        }
+
         var payload = new
         {
             Name = formName,
@@ -239,7 +265,12 @@
         }
         else
         {
-            // TODO: Error alert
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = "Failed to create form."
+            });
         }
     }
 

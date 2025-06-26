@@ -8,6 +8,7 @@
     user-select: none;
     display: inline-flex;
     align-items: center;
+    flex: 0 0 calc(50% - 0.5rem);
 }
 
     .draggable-field:active {

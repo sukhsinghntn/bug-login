@@ -270,6 +270,31 @@ else
             return;
         }
 
+        foreach (var f in rows.SelectMany(r => r.Fields))
+        {
+            if (string.IsNullOrWhiteSpace(f.Key) || string.IsNullOrWhiteSpace(f.Label))
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Field details missing",
+                    Detail = "Each field needs a key and a label."
+                });
+                return;
+            }
+
+            if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") && f.OptionItems.Count == 0)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Options required",
+                    Detail = $"Add at least one option for '{f.Label}'."
+                });
+                return;
+            }
+        }
+
         var payload = new
         {
             Name = formName,
