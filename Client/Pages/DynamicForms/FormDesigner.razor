@@ -16,6 +16,10 @@
            placeholder="Enter your form title"
            @bind="formName" />
 </div>
+<div class="mb-4">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" placeholder="Enter a description" @bind="formDescription"></textarea>
+</div>
 
 <div class="form-check form-switch mb-4">
     <input class="form-check-input" type="checkbox" id="loginToggle" @bind="requireLogin" />
@@ -98,6 +102,7 @@
 
 @code {
     private string formName = string.Empty;
+    private string formDescription = string.Empty;
     private List<DesignerField> fields = new();
     private bool requireLogin = true;
     private bool notifyOnResponse = false;
@@ -139,6 +144,7 @@
         var payload = new
         {
             Name = formName,
+            Description = formDescription,
             RequireLogin = requireLogin,
             NotifyOnResponse = notifyOnResponse,
             NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,

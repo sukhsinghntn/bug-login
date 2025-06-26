@@ -24,11 +24,12 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
-        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
+        public async Task<int> CreateFormAsync(string formName, string? description, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
             {
                 Name = formName,
+                Description = description,
                 CreatedBy = createdBy,
                 RequireLogin = requireLogin,
                 NotifyOnResponse = notifyOnResponse,

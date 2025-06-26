@@ -23,6 +23,7 @@ else
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Description</th>
                     <th></th>
                 </tr>
             </thead>
@@ -31,6 +32,7 @@ else
                 {
                     <tr>
                         <td>@f.Name</td>
+                        <td>@f.Description</td>
                         <td>
                             <a class="btn btn-sm btn-primary" href="@($"/forms/{f.Id}")">Open</a>
                         </td>
@@ -47,7 +49,9 @@ else
 
     private IEnumerable<Form> FilteredForms => string.IsNullOrWhiteSpace(searchTerm)
         ? forms ?? Enumerable.Empty<Form>()
-        : forms?.Where(f => f.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        : forms?.Where(f =>
+            (f.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (f.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
             ?? Enumerable.Empty<Form>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
