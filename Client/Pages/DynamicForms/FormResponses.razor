@@ -106,12 +106,15 @@
             responses = await Http.GetFromJsonAsync<List<Dictionary<string, object>>>($"api/forms/{FormId}/responses");
 
             var fieldKeys = form.Fields.Select(f => f.Key);
-            columns = new[] { "ResponseId", "CreatedAt" }.Concat(fieldKeys);
+            columns = new[] { "ResponseId", "CreatedAt" }
+                .Concat(fieldKeys)
+                .ToArray();
             if (form.RequireLogin)
             {
-                columns = columns.Concat(new[] { "ResponderName" });
+                columns = columns
+                    .Concat(new[] { "ResponderName" })
+                    .ToArray();
             }
-            columns = columns.ToArray();
 
             StateHasChanged();
         }
