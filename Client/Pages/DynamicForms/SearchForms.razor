@@ -1,0 +1,49 @@
+@page "/search"
+@using System.Net.Http.Json
+@using DynamicFormsApp.Shared.Models
+@inject HttpClient Http
+
+<h3>Search Forms</h3>
+
+<div class="mb-3">
+    <input class="form-control" placeholder="Search by form name" @bind="query" />
+</div>
+<button class="btn btn-primary mb-3" @onclick="Search">Search</button>
+
+@if (results == null)
+{
+    <p>Loading...</p>
+}
+else if (!results.Any())
+{
+    <p>No forms found.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var f in results)
+        {
+            <a class="list-group-item list-group-item-action" href="@($"/forms/{f.Id}")">@f.Name</a>
+        }
+    </div>
+}
+
+@code {
+    private string query = string.Empty;
+    private List<Form>? results;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Search();
+        }
+    }
+
+    private async Task Search()
+    {
+        var url = $"api/forms/search?q={Uri.EscapeDataString(query ?? string.Empty)}";
+        results = await Http.GetFromJsonAsync<List<Form>>(url);
+        StateHasChanged();
+    }
+}

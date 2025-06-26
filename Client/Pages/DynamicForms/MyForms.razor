@@ -4,6 +4,7 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject CookieHelper CookieHelper
+@inject IJSRuntime JS
 
 <h3 class="mb-3">My Forms</h3>
 
@@ -33,7 +34,8 @@ else
                         <td>
                             <a class="btn btn-sm btn-primary me-2" href="@($"/forms/{f.Id}")">Open</a>
                             <a class="btn btn-sm btn-secondary me-2" href="@($"/forms/{f.Id}/responses")">Responses</a>
-                            <a class="btn btn-sm btn-info" href="@($"/forms/{f.Id}/summary")">Summary</a>
+                            <a class="btn btn-sm btn-info me-2" href="@($"/forms/{f.Id}/summary")">Summary</a>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteForm(f.Id)">Delete</button>
                         </td>
                     </tr>
                 }
@@ -58,6 +60,23 @@ else
             }
 
             forms = await Http.GetFromJsonAsync<List<Form>>("api/forms/mine");
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteForm(int id)
+    {
+        bool confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this form?");
+        if (!confirm)
+        {
+            return;
+        }
+
+        await Http.DeleteAsync($"api/forms/{id}");
+        var item = forms?.FirstOrDefault(f => f.Id == id);
+        if (item != null)
+        {
+            forms!.Remove(item);
             StateHasChanged();
         }
     }

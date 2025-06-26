@@ -1,5 +1,6 @@
 ﻿using DynamicFormsApp.Server.Services;
 using DynamicFormsApp.Shared.Models;
+using DynamicFormsApp.Shared.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,9 +12,14 @@ namespace DynamicFormsApp.Server.Controllers
     public class FormsController : ControllerBase
     {
         private readonly DynamicFormService _svc;
-        public FormsController(DynamicFormService svc)
+        private readonly IUserService _userSvc;
+        private readonly IEmailService _emailSvc;
+
+        public FormsController(DynamicFormService svc, IUserService userSvc, IEmailService emailSvc)
         {
             _svc = svc;
+            _userSvc = userSvc;
+            _emailSvc = emailSvc;
         }
 
         // POST /api/forms
@@ -25,7 +31,7 @@ namespace DynamicFormsApp.Server.Controllers
                 return Unauthorized();
             }
 
-            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin);
+            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
             return Ok(new { FormId = newFormId });
         }
 
@@ -54,6 +60,14 @@ namespace DynamicFormsApp.Server.Controllers
             return Ok(all);
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Form>>> Search([FromQuery] string q)
+        {
+            bool includePrivate = Request.Cookies.ContainsKey("userName");
+            var results = await _svc.SearchFormsAsync(q ?? string.Empty, includePrivate);
+            return Ok(results);
+        }
+
         [HttpGet("mine")]
         public async Task<ActionResult<IEnumerable<Form>>> GetMine()
         {
@@ -66,6 +80,19 @@ namespace DynamicFormsApp.Server.Controllers
             return Ok(mine);
         }
 
+        // DELETE /api/forms/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (!Request.Cookies.TryGetValue("userName", out var user) || string.IsNullOrEmpty(user))
+            {
+                return Unauthorized();
+            }
+
+            await _svc.DeactivateFormAsync(id, user);
+            return NoContent();
+        }
+
         // POST /api/forms/{id}/responses
         [HttpPost("{id}/responses")]
 
@@ -73,8 +100,26 @@ namespace DynamicFormsApp.Server.Controllers
         {
             try
             {
+                var form = await _svc.StoreResponseAsync(id, values);
 
-                await _svc.StoreResponseAsync(id, values);
+                if (form.NotifyOnResponse)
+                {
+                    string? to = form.NotificationEmail;
+                    if (string.IsNullOrWhiteSpace(to))
+                    {
+                        var user = await _userSvc.GetUserData(form.CreatedBy);
+                        if (user != null && !string.IsNullOrEmpty(user.Email))
+                        {
+                            to = user.Email;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(to))
+                    {
+                        await _emailSvc.SendFormResponseNotification(to, form.Name, form.Id);
+                    }
+                }
+
                 return NoContent();
             }
             catch (Exception ex)
