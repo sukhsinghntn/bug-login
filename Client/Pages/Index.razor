@@ -1,14 +1,17 @@
 @page "/"
 @inject NavigationManager Navigation
 @inject CookieHelper CookieHelper
+@inject HttpClient Http
 
 <h3 class="mb-3">Welcome</h3>
+<p class="text-muted">Total forms created: @totalForms</p>
 <div class="d-flex gap-3">
     <a href="/forms/new" class="btn btn-primary">Create Form</a>
     <a href="/myforms" class="btn btn-secondary">My Forms</a>
 </div>
 
 @code {
+    private int totalForms;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -18,6 +21,12 @@
             {
                 var ret = Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri));
                 Navigation.NavigateTo($"login?returnUrl={ret}", true);
+            }
+            else
+            {
+                var forms = await Http.GetFromJsonAsync<List<Form>>("api/forms");
+                totalForms = forms?.Count(f => f.IsActive) ?? 0;
+                StateHasChanged();
             }
         }
     }

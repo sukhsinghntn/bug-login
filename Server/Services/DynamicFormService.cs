@@ -24,13 +24,16 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
-        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin)
+        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
             {
                 Name = formName,
                 CreatedBy = createdBy,
                 RequireLogin = requireLogin,
+                NotifyOnResponse = notifyOnResponse,
+                NotificationEmail = notificationEmail,
+                IsActive = isActive,
                 Fields = fields.Select(f => new FormField
                 {
                     Key = SanitizeKey(f.Key),
@@ -70,7 +73,7 @@ namespace DynamicFormsApp.Server.Services
                 ?? throw new InvalidOperationException("Form not found");
         }
 
-        public async Task StoreResponseAsync(int formId, Dictionary<string, object> values)
+        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values)
         {
             var form = await _db.Forms.FindAsync(formId)
                        ?? throw new InvalidOperationException("Form not found");
@@ -116,20 +119,49 @@ namespace DynamicFormsApp.Server.Services
 
             sqlParams.Add(new SqlParameter("@p_created", DateTime.UtcNow));
             await _db.Database.ExecuteSqlRawAsync(sql, sqlParams.ToArray());
+
+            return form;
+        }
+
+        public async Task DeactivateFormAsync(int formId, string user)
+        {
+            var form = await _db.Forms.FirstOrDefaultAsync(f => f.Id == formId && f.CreatedBy == user);
+            if (form == null)
+            {
+                throw new InvalidOperationException("Form not found");
+            }
+
+            form.IsActive = false;
+            await _db.SaveChangesAsync();
         }
 
         public async Task<List<Form>> GetAllFormsAsync()
         {
             return await _db.Forms
                 .Include(f => f.Fields)
+                .Where(f => f.IsActive)
                 .ToListAsync();
+        }
+
+        public async Task<List<Form>> SearchFormsAsync(bool includePrivate)
+        {
+            var query = _db.Forms
+                .Include(f => f.Fields)
+                .Where(f => f.IsActive);
+
+            if (!includePrivate)
+            {
+                query = query.Where(f => !f.RequireLogin);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<List<Form>> GetFormsByUserAsync(string user)
         {
             return await _db.Forms
                 .Include(f => f.Fields)
-                .Where(f => f.CreatedBy == user)
+                .Where(f => f.CreatedBy == user && f.IsActive)
                 .ToListAsync();
         }
 
