@@ -33,6 +33,7 @@
                         {
                             <th scope="col">@col</th>
                         }
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,6 +72,9 @@
                                     }
                                 </td>
                             }
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="@($"/forms/{FormId}/responses/{row["ResponseId"]}")">View</a>
+                            </td>
                         </tr>
                     }
                 </tbody>

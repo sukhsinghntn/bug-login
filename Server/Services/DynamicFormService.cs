@@ -198,6 +198,40 @@ namespace DynamicFormsApp.Server.Services
             return results;
         }
 
+        public async Task<Dictionary<string, object>> GetResponseAsync(int formId, int responseId)
+        {
+            var form = await _db.Forms.FindAsync(formId)
+                       ?? throw new InvalidOperationException("Form not found");
+            var rawName = SanitizeKey(form.Name);
+            var tableName = $"Form_{formId}_{rawName}";
+
+            using var conn = _db.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"SELECT * FROM [{tableName}] WHERE ResponseId=@id;";
+            var param = cmd.CreateParameter();
+            param.ParameterName = "@id";
+            param.Value = responseId;
+            cmd.Parameters.Add(param);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+            {
+                throw new InvalidOperationException("Response not found");
+            }
+
+            var row = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var name = reader.GetName(i);
+                var val = await reader.IsDBNullAsync(i) ? null : reader.GetValue(i);
+                row[name] = val!;
+            }
+            return row;
+        }
+
         private string MapToSqlType(string fieldType) => fieldType switch
         {
             "number" => "FLOAT",

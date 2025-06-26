@@ -44,6 +44,13 @@ namespace DynamicFormsApp.Server.Controllers
             return Ok(rows);
         }
 
+        [HttpGet("{id}/responses/{responseId}")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetResponse(int id, int responseId)
+        {
+            var row = await _svc.GetResponseAsync(id, responseId);
+            return Ok(row);
+        }
+
 
         // GET /api/forms/{id}
         [HttpGet("{id}")]
