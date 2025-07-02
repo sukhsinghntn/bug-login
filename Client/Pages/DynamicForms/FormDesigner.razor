@@ -145,7 +145,7 @@
             }
 
             objRef = DotNetObjectReference.Create(this);
-            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
             await sortableModule.InvokeVoidAsync("initListSortable", "#simple-fields", objRef);
         }
     }
@@ -164,7 +164,7 @@
         fields.Add(new DesignerField());
         await InvokeAsync(StateHasChanged);
         if (sortableModule == null)
-            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
     }
 
@@ -173,7 +173,7 @@
         fields.Remove(field);
         await InvokeAsync(StateHasChanged);
         if (sortableModule == null)
-            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
     }
 
@@ -191,7 +191,7 @@
         fields.Insert(index + 1, copy);
         await InvokeAsync(StateHasChanged);
         if (sortableModule == null)
-            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/sortable-wrapper.js");
+            sortableModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initListSortable", "#simple-fields", objRef!);
     }
 
