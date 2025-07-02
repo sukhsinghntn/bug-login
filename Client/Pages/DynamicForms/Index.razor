@@ -141,8 +141,8 @@ else
         if (!isPreviewMode && (firstRender || lastPreviewMode))
         {
             objRef ??= DotNetObjectReference.Create(this);
-            sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
-            dragdropModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/dragdrop-wrapper.js");
+            sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
+            dragdropModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/dragdrop-wrapper.js");
             await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef);
             await dragdropModule.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
             await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef);
@@ -190,7 +190,7 @@ else
         rows.RemoveAt(oldIndex);
         rows.Insert(newIndex, row);
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -199,7 +199,7 @@ else
     {
         rows.Add(new DesignerRow());
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -218,7 +218,7 @@ else
         }
         rows[row].Fields.Add(new DesignerField());
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -227,7 +227,7 @@ else
     {
         rows[row].Fields.Remove(field);
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -249,7 +249,7 @@ else
         var list = rows[row].Fields;
         list.Insert(list.IndexOf(field) + 1, copy);
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -281,7 +281,7 @@ else
             list.Insert(colIndex, field);
 
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
@@ -296,7 +296,7 @@ else
         row.Fields.Add(new DesignerField { FieldType = fieldType });
         rows.Insert(insertIndex, row);
         await InvokeAsync(StateHasChanged);
-        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "/_content/DynamicFormsApp.Server/js/sortable-wrapper.js");
         await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
         await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
