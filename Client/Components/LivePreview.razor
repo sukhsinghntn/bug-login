@@ -1,5 +1,9 @@
 ﻿@using DynamicFormsApp.Shared
 
+@if (!string.IsNullOrWhiteSpace(FormName))
+{
+    <h4 class="mb-2">@FormName</h4>
+}
 <h5 class="text-muted">Live Preview</h5>
 
 @foreach (var row in Rows)
@@ -122,4 +126,5 @@
 
 @code {
     [Parameter] public List<DesignerRow> Rows { get; set; } = new();
+    [Parameter] public string FormName { get; set; } = string.Empty;
 }

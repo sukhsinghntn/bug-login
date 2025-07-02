@@ -3,14 +3,17 @@
 @using System.Text.Json
 @using DynamicFormsApp.Client.Components
 @using DynamicFormsApp.Shared
+@using DynamicFormsApp.Shared.Models
 @inject IJSRuntime JS
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject CookieHelper CookieHelper
+@inject IUserService UserService
 
 @implements IDisposable
 
-<h2 class="mb-4">Form Builder</h2>
+<h2 class="mb-2">Form Builder</h2>
+<p class="text-muted">Drag fields to reorder or move them between rows. Each row can have up to four columns.</p>
 
 <div class="form-check form-switch mb-4">
     <input class="form-check-input" type="checkbox" id="previewToggle" @bind="isPreviewMode" />
@@ -21,18 +24,33 @@
     <label class="form-label">Form Name</label>
     <input class="form-control form-control-lg" placeholder="Enter your form title" @bind="formName" />
 </div>
+<div class="mb-4">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" placeholder="Enter a description" @bind="formDescription"></textarea>
+</div>
 
 <div class="form-check form-switch mb-4">
     <input class="form-check-input" type="checkbox" id="loginToggle" @bind="requireLogin" />
     <label class="form-check-label" for="loginToggle">Require login to access form</label>
 </div>
+<div class="form-check form-switch mb-4">
+    <input class="form-check-input" type="checkbox" id="notifyToggle" @bind="notifyOnResponse" />
+    <label class="form-check-label" for="notifyToggle">Email on new response</label>
+</div>
+@if (notifyOnResponse)
+{
+    <div class="mb-3">
+        <label class="form-label">Notification Email</label>
+        <input class="form-control" placeholder="@currentUser?.Email" @bind="notificationEmail" />
+    </div>
+}
 
 @if (!isPreviewMode)
 {
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3" style="position:sticky;top:75px;max-height:calc(100vh - 90px);overflow-y:auto;">
             <h5 class="mb-3">Toolbox</h5>
-            <div class="d-flex flex-column gap-2">
+            <div class="d-flex flex-wrap gap-2">
                 <div class="draggable-field" draggable="true" data-type="text"><span class="material-icons me-1">short_text</span> Short Answer</div>
                 <div class="draggable-field" draggable="true" data-type="textarea"><span class="material-icons me-1">notes</span> Paragraph</div>
                 <div class="draggable-field" draggable="true" data-type="radio"><span class="material-icons me-1">radio_button_checked</span> Multiple Choice</div>
@@ -55,17 +73,20 @@
                 {
                     var rowIndex = r;
                     <div class="row-dropzone" data-insert="@rowIndex"></div>
-                    <div class="row g-3 mb-3 designer-row" data-row="@rowIndex">
+                    <div class="row-wrapper position-relative mb-3" data-row="@rowIndex">
+                        <span class="row-handle text-muted"><i class="bi bi-grip-vertical"></i></span>
+                        <div class="row g-3 designer-row" data-row="@rowIndex">
                         @for (int i = 0; i < rows[rowIndex].Fields.Count; i++)
                         {
                             <div class="col-md-@(12 / (rows[rowIndex].Fields.Count == 0 ? 1 : rows[rowIndex].Fields.Count))" data-id="@i">
                                 <FieldEditor Field="rows[rowIndex].Fields[i]"
-                                             OnRemove="f => RemoveField(rowIndex, f)"
-                                             OnDuplicate="f => DuplicateField(rowIndex, f)" />
+                                             OnRemove="async f => await RemoveField(rowIndex, f)"
+                                             OnDuplicate="async f => await DuplicateField(rowIndex, f)" />
                             </div>
                         }
                         <div class="col-12">
                             <button class="btn btn-sm btn-outline-secondary" @onclick="() => AddField(rowIndex)">+ Add Column</button>
+                        </div>
                         </div>
                     </div>
                 }
@@ -83,16 +104,23 @@
 else
 {
     <div class="card p-3 shadow-sm">
-        <LivePreview Rows="rows" />
+        <LivePreview Rows="rows" FormName="@formName" />
     </div>
 }
 
 @code {
     private string formName = string.Empty;
+    private string formDescription = string.Empty;
     private List<DesignerRow> rows = new() { new DesignerRow() };
     private bool isPreviewMode = false;
     private bool requireLogin = true;
+    private bool notifyOnResponse = false;
+    private string notificationEmail = string.Empty;
+    private UserModel? currentUser;
     private DotNetObjectReference<Index>? objRef;
+    private IJSObjectReference? sortableModule;
+    private IJSObjectReference? dragdropModule;
+    private bool lastPreviewMode;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -106,14 +134,25 @@ else
                 return;
             }
 
-            objRef ??= DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef);
-            await JS.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
+            currentUser = await UserService.GetUserData(user);
+            notificationEmail = currentUser?.Email ?? string.Empty;
         }
+
+        if (!isPreviewMode && (firstRender || lastPreviewMode))
+        {
+            objRef ??= DotNetObjectReference.Create(this);
+            sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+            dragdropModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/dragdrop-wrapper.js");
+            await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef);
+            await dragdropModule.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
+            await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef);
+        }
+
+        lastPreviewMode = isPreviewMode;
     }
 
     [JSInvokable]
-    public void OnSortUpdate(int fromRow, int oldIndex, int toRow, int newIndex)
+    public async Task OnSortUpdate(int fromRow, int oldIndex, int toRow, int newIndex)
     {
         if (fromRow < 0 || fromRow >= rows.Count || toRow < 0 || toRow >= rows.Count)
             return;
@@ -124,19 +163,76 @@ else
         if (oldIndex < 0 || oldIndex >= source.Count || newIndex < 0 || newIndex > dest.Count)
             return;
 
+        if (fromRow != toRow && dest.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
         var moved = source[oldIndex];
         source.RemoveAt(oldIndex);
         dest.Insert(newIndex, moved);
         StateHasChanged();
     }
 
-    void AddRow() => rows.Add(new DesignerRow());
+    [JSInvokable]
+    public async Task OnRowReorder(int oldIndex, int newIndex)
+    {
+        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= rows.Count || newIndex >= rows.Count)
+            return;
+        var row = rows[oldIndex];
+        rows.RemoveAt(oldIndex);
+        rows.Insert(newIndex, row);
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
+    }
 
-    void AddField(int row) => rows[row].Fields.Add(new DesignerField());
+    async Task AddRow()
+    {
+        rows.Add(new DesignerRow());
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
+    }
 
-    void RemoveField(int row, DesignerField field) => rows[row].Fields.Remove(field);
+    async Task AddField(int row)
+    {
+        if (rows[row].Fields.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            return;
+        }
+        rows[row].Fields.Add(new DesignerField());
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
+    }
 
-    void DuplicateField(int row, DesignerField field)
+    async Task RemoveField(int row, DesignerField field)
+    {
+        rows[row].Fields.Remove(field);
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
+    }
+
+    async Task DuplicateField(int row, DesignerField field)
     {
         var copy = new DesignerField
         {
@@ -152,10 +248,14 @@ else
         };
         var list = rows[row].Fields;
         list.Insert(list.IndexOf(field) + 1, copy);
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
-    public void AddFieldFromDrop(string fieldType, int rowIndex, int colIndex)
+    public async Task AddFieldFromDrop(string fieldType, int rowIndex, int colIndex)
     {
         if (rowIndex < 0 || rowIndex >= rows.Count)
             rowIndex = rows.Count - 1;
@@ -163,16 +263,31 @@ else
         var list = rows[rowIndex].Fields;
         var field = new DesignerField { FieldType = fieldType };
 
+        if (list.Count >= 4)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Column limit reached",
+                Detail = "A row can contain at most four columns."
+            });
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
         if (colIndex < 0 || colIndex > list.Count)
             list.Add(field);
         else
             list.Insert(colIndex, field);
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
-    public void AddRowFromDrop(string fieldType, int insertIndex)
+    public async Task AddRowFromDrop(string fieldType, int insertIndex)
     {
         if (insertIndex < 0 || insertIndex > rows.Count)
             insertIndex = rows.Count;
@@ -180,15 +295,58 @@ else
         var row = new DesignerRow();
         row.Fields.Add(new DesignerField { FieldType = fieldType });
         rows.Insert(insertIndex, row);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+        sortableModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/sortable-wrapper.js");
+        await sortableModule.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await sortableModule.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     async Task HandleSubmit()
     {
+        if (string.IsNullOrWhiteSpace(formName))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Form name required",
+                Detail = "Please enter a form name before creating."
+            });
+            return;
+        }
+
+        foreach (var f in rows.SelectMany(r => r.Fields))
+        {
+            if (string.IsNullOrWhiteSpace(f.Key) || string.IsNullOrWhiteSpace(f.Label))
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Field details missing",
+                    Detail = "Each field needs a key and a label."
+                });
+                return;
+            }
+
+            if ((f.FieldType == "radio" || f.FieldType == "checkbox" || f.FieldType == "dropdown") && f.OptionItems.Count == 0)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Options required",
+                    Detail = $"Add at least one option for '{f.Label}'."
+                });
+                return;
+            }
+        }
+
         var payload = new
         {
             Name = formName,
+            Description = formDescription,
             RequireLogin = requireLogin,
+            NotifyOnResponse = notifyOnResponse,
+            NotificationEmail = string.IsNullOrWhiteSpace(notificationEmail) ? null : notificationEmail,
+            IsActive = true,
             Fields = rows.SelectMany((row, rIdx) => row.Fields.Select((f, cIdx) => new
             {
                 f.Key,
@@ -217,5 +375,7 @@ else
     public void Dispose()
     {
         objRef?.Dispose();
+        _ = sortableModule?.DisposeAsync();
+        _ = dragdropModule?.DisposeAsync();
     }
 }

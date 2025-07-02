@@ -3,9 +3,12 @@
     cursor: grab;
     border: 1px dashed #ced4da;
     background-color: #f8f9fa;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     transition: all 0.2s ease;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 calc(50% - 0.5rem);
 }
 
     .draggable-field:active {
@@ -38,6 +41,22 @@
     .drag-handle:active {
         cursor: grabbing;
     }
+
+/* ↕️ Row move handle */
+.row-handle {
+    cursor: grab;
+    position: absolute;
+    left: -1rem;
+    top: 0.25rem;
+}
+
+    .row-handle:active {
+        cursor: grabbing;
+    }
+
+.row-wrapper {
+    position: relative;
+}
 /* ➕ Row drop zones */
 .row-dropzone {
     height: 20px;
@@ -78,5 +97,8 @@ body[data-bs-theme="dark"] .row-dropzone {
 }
 body[data-bs-theme="dark"] .row-dropzone::after {
     background: #343a40;
+    color: #adb5bd;
+}
+body[data-bs-theme="dark"] .row-handle {
     color: #adb5bd;
 }
