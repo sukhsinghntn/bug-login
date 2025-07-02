@@ -157,7 +157,7 @@ else
                 Summary = "Column limit reached",
                 Detail = "A row can contain at most four columns."
             });
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
@@ -170,6 +170,7 @@ else
     async Task AddRow()
     {
         rows.Add(new DesignerRow());
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
@@ -186,12 +187,14 @@ else
             return;
         }
         rows[row].Fields.Add(new DesignerField());
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
     async Task RemoveField(int row, DesignerField field)
     {
         rows[row].Fields.Remove(field);
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
@@ -211,6 +214,7 @@ else
         };
         var list = rows[row].Fields;
         list.Insert(list.IndexOf(field) + 1, copy);
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
@@ -231,7 +235,7 @@ else
                 Summary = "Column limit reached",
                 Detail = "A row can contain at most four columns."
             });
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
@@ -240,7 +244,7 @@ else
         else
             list.Insert(colIndex, field);
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
@@ -253,7 +257,7 @@ else
         var row = new DesignerRow();
         row.Fields.Add(new DesignerField { FieldType = fieldType });
         rows.Insert(insertIndex, row);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
     }
 
