@@ -22,6 +22,7 @@ else
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Description</th>
                     <th></th>
                 </tr>
             </thead>
@@ -30,6 +31,7 @@ else
                 {
                     <tr>
                         <td>@f.Name</td>
+                        <td>@f.Description</td>
                         <td>
                             <a class="btn btn-sm btn-primary me-2" href="@($"/forms/{f.Id}")">Open</a>
                             <a class="btn btn-sm btn-secondary me-2" href="@($"/forms/{f.Id}/responses")">Responses</a>

@@ -31,6 +31,7 @@ namespace DynamicFormsApp.Server.Controllers
                 return Unauthorized();
             }
 
+            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Description, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
             var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
             return Ok(new { FormId = newFormId });
         }
@@ -42,6 +43,13 @@ namespace DynamicFormsApp.Server.Controllers
         {
             var rows = await _svc.GetResponsesAsync(id);
             return Ok(rows);
+        }
+
+        [HttpGet("{id}/responses/{responseId}")]
+        public async Task<ActionResult<Dictionary<string, object>>> GetResponse(int id, int responseId)
+        {
+            var row = await _svc.GetResponseAsync(id, responseId);
+            return Ok(row);
         }
 
 
@@ -100,6 +108,15 @@ namespace DynamicFormsApp.Server.Controllers
         {
             try
             {
+                string? responder = null;
+                var form = await _svc.GetFormAsync(id);
+                if (form.RequireLogin && Request.Cookies.TryGetValue("userName", out var userId) && !string.IsNullOrEmpty(userId))
+                {
+                    var userData = await _userSvc.GetUserData(userId);
+                    responder = userData?.DisplayName ?? userId;
+                }
+
+                form = await _svc.StoreResponseAsync(id, values, responder);
                 var form = await _svc.StoreResponseAsync(id, values);
 
                 if (form.NotifyOnResponse)

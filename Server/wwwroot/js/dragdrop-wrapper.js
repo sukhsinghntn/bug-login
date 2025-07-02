@@ -1,4 +1,4 @@
-window.initFieldDragDrop = (canvasSelector, dotnetHelper) => {
+export function initFieldDragDrop(canvasSelector, dotnetHelper) {
     const canvas = document.querySelector(canvasSelector);
     if (!canvas) return;
     if (canvas.dataset.dragInit === 'true') return;
@@ -46,7 +46,10 @@ window.initFieldDragDrop = (canvasSelector, dotnetHelper) => {
         }
         dotnetHelper.invokeMethodAsync('AddFieldFromDrop', type, rowIndex, colIndex);
     });
-}; 
+}
 
-// Backwards compatibility
-window.initDragDrop = window.initFieldDragDrop;
+export const initDragDrop = initFieldDragDrop;
+
+// Expose globally for non-module usage
+window.initFieldDragDrop = initFieldDragDrop;
+window.initDragDrop = initDragDrop;

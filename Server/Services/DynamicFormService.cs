@@ -24,16 +24,34 @@ namespace DynamicFormsApp.Server.Services
         private string SanitizeKey(string raw) =>
             Regex.Replace(raw, @"[^\w]", "_");
 
+        private string GetUniqueKey(string rawKey, HashSet<string> existing)
+        {
+            var baseKey = SanitizeKey(rawKey);
+            var unique = baseKey;
+            int suffix = 1;
+            while (existing.Contains(unique))
+            {
+                unique = $"{baseKey}_{suffix}";
+                suffix++;
+            }
+            existing.Add(unique);
+            return unique;
+        }
+
+
+        public async Task<int> CreateFormAsync(string formName, string? description, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
             {
                 Name = formName,
+                Description = description,
                 CreatedBy = createdBy,
                 RequireLogin = requireLogin,
                 NotifyOnResponse = notifyOnResponse,
                 NotificationEmail = notificationEmail,
                 IsActive = isActive,
+                Fields = new List<FormField>()
                 Fields = fields.Select(f => new FormField
                 {
                     Key = SanitizeKey(f.Key),
@@ -45,6 +63,20 @@ namespace DynamicFormsApp.Server.Services
                     Column = f.Column
                 }).ToList()
             };
+            var keySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var fld in fields)
+            {
+                form.Fields.Add(new FormField
+                {
+                    Key = GetUniqueKey(fld.Key, keySet),
+                    Label = fld.Label,
+                    FieldType = fld.FieldType,
+                    IsRequired = fld.IsRequired,
+                    OptionsJson = fld.OptionsJson,
+                    Row = fld.Row,
+                    Column = fld.Column
+                });
+            }
             _db.Forms.Add(form);
             await _db.SaveChangesAsync();
 
@@ -54,6 +86,10 @@ namespace DynamicFormsApp.Server.Services
                 $"CREATE TABLE [{tableName}] (" +
                 "ResponseId INT IDENTITY(1,1) PRIMARY KEY, " +
                 "CreatedAt DATETIME2 NOT NULL");
+            if (requireLogin)
+            {
+                sb.Append(", [ResponderName] NVARCHAR(255) NULL");
+            }
 
             foreach (var fld in form.Fields)
             {
@@ -73,6 +109,7 @@ namespace DynamicFormsApp.Server.Services
                 ?? throw new InvalidOperationException("Form not found");
         }
 
+        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values, string? responderName = null)
         public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values)
         {
             var form = await _db.Forms.FindAsync(formId)
@@ -84,6 +121,11 @@ namespace DynamicFormsApp.Server.Services
             var paramNames = string.Join(", ",
                 values.Keys.Select((k, i) => $"@p{i}")
                            .Concat(new[] { "@p_created" }));
+            if (form.RequireLogin)
+            {
+                cols += ", ResponderName";
+                paramNames += ", @p_responder";
+            }
 
             var sql = $"INSERT INTO [{tableName}] ({cols}) VALUES ({paramNames});";
 
@@ -118,6 +160,10 @@ namespace DynamicFormsApp.Server.Services
             }
 
             sqlParams.Add(new SqlParameter("@p_created", DateTime.UtcNow));
+            if (form.RequireLogin)
+            {
+                sqlParams.Add(new SqlParameter("@p_responder", (object?)responderName ?? DBNull.Value));
+            }
             await _db.Database.ExecuteSqlRawAsync(sql, sqlParams.ToArray());
 
             return form;
@@ -195,6 +241,40 @@ namespace DynamicFormsApp.Server.Services
                 results.Add(row);
             }
             return results;
+        }
+
+        public async Task<Dictionary<string, object>> GetResponseAsync(int formId, int responseId)
+        {
+            var form = await _db.Forms.FindAsync(formId)
+                       ?? throw new InvalidOperationException("Form not found");
+            var rawName = SanitizeKey(form.Name);
+            var tableName = $"Form_{formId}_{rawName}";
+
+            using var conn = _db.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"SELECT * FROM [{tableName}] WHERE ResponseId=@id;";
+            var param = cmd.CreateParameter();
+            param.ParameterName = "@id";
+            param.Value = responseId;
+            cmd.Parameters.Add(param);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+            {
+                throw new InvalidOperationException("Response not found");
+            }
+
+            var row = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var name = reader.GetName(i);
+                var val = await reader.IsDBNullAsync(i) ? null : reader.GetValue(i);
+                row[name] = val!;
+            }
+            return row;
         }
 
         private string MapToSqlType(string fieldType) => fieldType switch
