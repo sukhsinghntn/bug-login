@@ -144,7 +144,7 @@ else
     }
 
     [JSInvokable]
-    public void OnSortUpdate(int fromRow, int oldIndex, int toRow, int newIndex)
+    public async Task OnSortUpdate(int fromRow, int oldIndex, int toRow, int newIndex)
     {
         if (fromRow < 0 || fromRow >= rows.Count || toRow < 0 || toRow >= rows.Count)
             return;
