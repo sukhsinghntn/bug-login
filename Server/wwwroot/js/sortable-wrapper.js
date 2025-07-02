@@ -1,4 +1,4 @@
-window.initSortable = (selector, dotnetHelper) => {
+globalThis.initSortable = (selector, dotnetHelper) => {
     const container = document.querySelector(selector);
     if (!container) return;
 
@@ -18,7 +18,7 @@ window.initSortable = (selector, dotnetHelper) => {
     });
 };
 
-window.initListSortable = (selector, dotnetHelper) => {
+globalThis.initListSortable = (selector, dotnetHelper) => {
     const container = document.querySelector(selector);
     if (!container || container.dataset.sortableInit === 'true') return;
     container.dataset.sortableInit = 'true';
@@ -29,7 +29,7 @@ window.initListSortable = (selector, dotnetHelper) => {
     });
 };
 
-window.initRowSortable = (selector, dotnetHelper) => {
+globalThis.initRowSortable = (selector, dotnetHelper) => {
     const container = document.querySelector(selector);
     if (!container || container.dataset.rowSortableInit === 'true') return;
     container.dataset.rowSortableInit = 'true';
