@@ -32,6 +32,7 @@ namespace DynamicFormsApp.Server.Controllers
             }
 
             var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Description, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
+            var newFormId = await _svc.CreateFormAsync(dto.Name, dto.Fields, user, dto.RequireLogin, dto.NotifyOnResponse, dto.NotificationEmail, dto.IsActive);
             return Ok(new { FormId = newFormId });
         }
 
@@ -116,6 +117,7 @@ namespace DynamicFormsApp.Server.Controllers
                 }
 
                 form = await _svc.StoreResponseAsync(id, values, responder);
+                var form = await _svc.StoreResponseAsync(id, values);
 
                 if (form.NotifyOnResponse)
                 {

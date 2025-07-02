@@ -52,6 +52,7 @@ else
         : forms?.Where(f =>
             (f.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
             (f.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+        : forms?.Where(f => f.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
             ?? Enumerable.Empty<Form>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

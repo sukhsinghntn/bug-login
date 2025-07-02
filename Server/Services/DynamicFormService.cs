@@ -40,6 +40,7 @@ namespace DynamicFormsApp.Server.Services
 
 
         public async Task<int> CreateFormAsync(string formName, string? description, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
+        public async Task<int> CreateFormAsync(string formName, List<FormField> fields, string createdBy, bool requireLogin, bool notifyOnResponse, string? notificationEmail, bool isActive)
         {
             var form = new Form
             {
@@ -51,6 +52,16 @@ namespace DynamicFormsApp.Server.Services
                 NotificationEmail = notificationEmail,
                 IsActive = isActive,
                 Fields = new List<FormField>()
+                Fields = fields.Select(f => new FormField
+                {
+                    Key = SanitizeKey(f.Key),
+                    Label = f.Label,
+                    FieldType = f.FieldType,
+                    IsRequired = f.IsRequired,
+                    OptionsJson = f.OptionsJson,
+                    Row = f.Row,
+                    Column = f.Column
+                }).ToList()
             };
             var keySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var fld in fields)
@@ -99,6 +110,7 @@ namespace DynamicFormsApp.Server.Services
         }
 
         public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values, string? responderName = null)
+        public async Task<Form> StoreResponseAsync(int formId, Dictionary<string, object> values)
         {
             var form = await _db.Forms.FindAsync(formId)
                        ?? throw new InvalidOperationException("Form not found");
