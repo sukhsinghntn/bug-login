@@ -101,7 +101,7 @@
 else
 {
     <div class="card p-3 shadow-sm">
-        <LivePreview Rows="rows" />
+        <LivePreview Rows="rows" FormName="formName" />
     </div>
 }
 
@@ -115,6 +115,7 @@ else
     private string notificationEmail = string.Empty;
     private UserModel? currentUser;
     private DotNetObjectReference<Index>? objRef;
+    private bool lastPreviewMode;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -130,11 +131,16 @@ else
 
             currentUser = await UserService.GetUserData(user);
             notificationEmail = currentUser?.Email ?? string.Empty;
+        }
 
+        if (!isPreviewMode && (firstRender || lastPreviewMode))
+        {
             objRef ??= DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef);
             await JS.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
         }
+
+        lastPreviewMode = isPreviewMode;
     }
 
     [JSInvokable]

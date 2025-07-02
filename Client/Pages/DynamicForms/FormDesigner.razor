@@ -58,10 +58,10 @@
                            @bind="field.Label" />
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => DuplicateField(index)">
+                    <button class="btn btn-sm btn-outline-secondary" title="Duplicate" @onclick="() => DuplicateField(index)">
                         <i class="bi bi-copy"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveField(field)">
+                    <button class="btn btn-sm btn-outline-danger" title="Remove" @onclick="() => RemoveField(field)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
