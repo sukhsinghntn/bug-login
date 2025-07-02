@@ -73,7 +73,9 @@
                 {
                     var rowIndex = r;
                     <div class="row-dropzone" data-insert="@rowIndex"></div>
-                    <div class="row g-3 mb-3 designer-row" data-row="@rowIndex">
+                    <div class="row-wrapper position-relative mb-3" data-row="@rowIndex">
+                        <span class="row-handle text-muted"><i class="bi bi-grip-vertical"></i></span>
+                        <div class="row g-3 designer-row" data-row="@rowIndex">
                         @for (int i = 0; i < rows[rowIndex].Fields.Count; i++)
                         {
                             <div class="col-md-@(12 / (rows[rowIndex].Fields.Count == 0 ? 1 : rows[rowIndex].Fields.Count))" data-id="@i">
@@ -84,6 +86,7 @@
                         }
                         <div class="col-12">
                             <button class="btn btn-sm btn-outline-secondary" @onclick="() => AddField(rowIndex)">+ Add Column</button>
+                        </div>
                         </div>
                     </div>
                 }
@@ -138,6 +141,7 @@ else
             objRef ??= DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef);
             await JS.InvokeVoidAsync("initFieldDragDrop", "#fields-container", objRef);
+            await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef);
         }
 
         lastPreviewMode = isPreviewMode;
@@ -173,11 +177,25 @@ else
         StateHasChanged();
     }
 
+    [JSInvokable]
+    public async Task OnRowReorder(int oldIndex, int newIndex)
+    {
+        if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= rows.Count || newIndex >= rows.Count)
+            return;
+        var row = rows[oldIndex];
+        rows.RemoveAt(oldIndex);
+        rows.Insert(newIndex, row);
+        await InvokeAsync(StateHasChanged);
+        await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
+    }
+
     async Task AddRow()
     {
         rows.Add(new DesignerRow());
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     async Task AddField(int row)
@@ -195,6 +213,7 @@ else
         rows[row].Fields.Add(new DesignerField());
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     async Task RemoveField(int row, DesignerField field)
@@ -202,6 +221,7 @@ else
         rows[row].Fields.Remove(field);
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     async Task DuplicateField(int row, DesignerField field)
@@ -222,6 +242,7 @@ else
         list.Insert(list.IndexOf(field) + 1, copy);
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
@@ -252,6 +273,7 @@ else
 
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     [JSInvokable]
@@ -265,6 +287,7 @@ else
         rows.Insert(insertIndex, row);
         await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("initSortable", "#fields-container", objRef!);
+        await JS.InvokeVoidAsync("initRowSortable", "#fields-container", objRef!);
     }
 
     async Task HandleSubmit()

@@ -28,3 +28,15 @@ window.initListSortable = (selector, dotnetHelper) => {
         onEnd: evt => dotnetHelper.invokeMethodAsync('OnFieldReorder', evt.oldIndex, evt.newIndex)
     });
 };
+
+window.initRowSortable = (selector, dotnetHelper) => {
+    const container = document.querySelector(selector);
+    if (!container || container.dataset.rowSortableInit === 'true') return;
+    container.dataset.rowSortableInit = 'true';
+    new Sortable(container, {
+        animation: 150,
+        handle: '.row-handle',
+        draggable: '.row-wrapper',
+        onEnd: evt => dotnetHelper.invokeMethodAsync('OnRowReorder', evt.oldIndex, evt.newIndex)
+    });
+};

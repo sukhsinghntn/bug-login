@@ -41,6 +41,22 @@
     .drag-handle:active {
         cursor: grabbing;
     }
+
+/* ↕️ Row move handle */
+.row-handle {
+    cursor: grab;
+    position: absolute;
+    left: -1rem;
+    top: 0.25rem;
+}
+
+    .row-handle:active {
+        cursor: grabbing;
+    }
+
+.row-wrapper {
+    position: relative;
+}
 /* ➕ Row drop zones */
 .row-dropzone {
     height: 20px;
@@ -81,5 +97,8 @@ body[data-bs-theme="dark"] .row-dropzone {
 }
 body[data-bs-theme="dark"] .row-dropzone::after {
     background: #343a40;
+    color: #adb5bd;
+}
+body[data-bs-theme="dark"] .row-handle {
     color: #adb5bd;
 }
